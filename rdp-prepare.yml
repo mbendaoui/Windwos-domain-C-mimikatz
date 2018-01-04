@@ -1,0 +1,19 @@
+---
+
+  - name: "Prepation remote desk"
+    hosts: localhost
+    gather_facts: "false"
+
+    vars:
+    
+     ip_client: "{{ ip_c }}"
+
+    tasks:
+ 
+      - lineinfile:
+         path: /home/dbendaoui3333/.remmina/1513523079333.remmina
+         regexp: '^server='
+         line: 'server={{ ip_c }}'
+ 
+
+...

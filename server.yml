@@ -1,0 +1,25 @@
+- name: "Install AD powershell script"
+  hosts: "windows"
+  gather_facts: "false"
+  vars:
+    dns1: "{{ ip_dns }}"
+
+
+  tasks:
+
+
+    - win_dns_client:
+
+        adapter_names: "*"
+        ipv4_addresses:
+        - "{{ ip_dns }}"
+        - 8.8.8.8
+        log_path: c:\dns_log.txt
+
+    - name: "Starting Script"
+
+      script: "files/prepare.ps1"
+    
+   
+    - win_reboot:
+

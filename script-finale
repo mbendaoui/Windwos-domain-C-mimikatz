@@ -1,0 +1,117 @@
+ #!/bin/bash
+
+
+#cd  /home/dbendaoui3333/vagrant
+
+#sudo timeout -s SIGKILL 60 vagrant up --provider=google 
+
+
+
+#cd /etc/ansible
+
+
+
+
+
+gcloud beta compute reset-windows-password win-client-2008s --zone\=europe-west3-a  --zone\=europe-west3-a > /tmp/win-client-2008 --quiet
+client_pass_state=$?
+ 
+if [ $client_pass_state -ne 0 ]
+then
+gcloud beta compute reset-windows-password win-client-2008s --zone\=europe-west3-a  --zone\=europe-west3-a > /tmp/win-client-2008  --quiet
+
+fi
+
+
+gcloud beta compute reset-windows-password win-ad2012 --zone\=europe-west3-a  --user=dbendaoui3333 > /tmp/win-ad2012 --quiet
+server_pass_state=$?
+ 
+if [ $server_pass_state -ne 0 ]
+then
+gcloud beta compute reset-windows-password win-ad2012 --zone\=europe-west3-a  --user=dbendaoui3333 > /tmp/win-ad2012  --quiet
+
+
+fi
+
+
+
+
+
+
+
+server_ip=$(grep ip_address /tmp/win-ad2012 | awk -F'ip_address: ' '{print $2}' )
+server_password=$(grep password /tmp/win-ad2012 | awk -F'password:   ' '{print $2}' )
+server_user=$(grep username /tmp/win-ad2012 | awk -F'username:   ' '{print $2}' )
+server_internal_ip=$(gcloud compute instances list |grep win-ad2012|  awk '{print  $4}')
+
+client_ip=$(grep ip_address /tmp/win-client-2008 | awk -F'ip_address: ' '{print $2}' )
+client_password=$(grep password /tmp/win-client-2008 | awk -F'password:   ' '{print $2}' )
+client_user=$(grep username /tmp/win-client-2008 | awk -F'username:   ' '{print $2}' )
+
+
+
+echo "ansible_ssh_user: ${server_user}" > group_vars/windows.yml
+echo "ansible_ssh_pass: '${server_password}'" >> group_vars/windows.yml
+echo "ansible_ssh_port: 5986" >> group_vars/windows.yml
+echo "ansible_connection: winrm" >> group_vars/windows.yml
+echo "ansible_winrm_server_cert_validation: ignore">>group_vars/windows.yml
+echo "ansible_winrm_transport: ntlm">>group_vars/windows.yml   
+
+
+
+echo "ansible_ssh_user: ${client_user}" > group_vars/client.yml
+echo "ansible_ssh_pass: '${client_password}'" >> group_vars/client.yml
+echo "ansible_ssh_port: 5986" >> group_vars/client.yml
+echo "ansible_connection: winrm" >> group_vars/client.yml
+echo "ansible_winrm_server_cert_validation: ignore">>group_vars/client.yml
+echo "ansible_winrm_transport: ntlm">>group_vars/client.yml
+
+
+echo "[windows]">hosts
+echo "${server_ip}">>hosts
+echo "[client]">>hosts
+echo "${client_ip}">>hosts
+
+
+
+
+echo "executing playbook domain intsaller"
+
+
+sudo ansible-playbook  server.yml  --extra-vars="ip_dns=${server_internal_ip}"
+
+
+
+
+
+
+#sudo timeout -s SIGKILL 20  remmina  --connect=/home/dbendaoui3333/.remmina/1513573620394.remmina 
+
+
+echo "Join the client to the domain "
+
+
+ 
+sudo  ansible-playbook  client.yml --extra-vars="ip_dns=${server_internal_ip}"
+
+
+
+
+echo "executing remote RDP from server to client with admin credentiels"
+
+sudo  ansible-playbook  rdp-prepare.yml --extra-vars="ip_c=${client_ip}"
+
+sleep 10
+
+#sudo remmina  --connect=/home/dbendaoui3333/.remmina/1512723190834.remmina
+
+
+sudo timeout -s SIGKILL 30 remmina  --connect=/home/dbendaoui3333/.remmina/1513523079333.remmina
+
+
+
+ansible-playbook  rdp.yml 
+
+cat /tmp/ana.txt
+
+

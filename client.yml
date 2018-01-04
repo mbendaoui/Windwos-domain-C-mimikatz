@@ -1,0 +1,55 @@
+---
+ - hosts: client
+   gather_facts: no
+   
+   vars:
+    dns1: "{{ ip_dns }}"
+   
+   tasks:
+
+
+
+
+     - name: Copy mimikatz 
+
+       win_copy:
+
+        src: files/mimikat
+
+        dest: c:\mimikat
+        recurse: yes
+        delete_archive: no
+
+     
+
+        
+    
+
+     - win_dns_client:
+    
+        adapter_names: "*"
+        ipv4_addresses:
+        - "{{ ip_dns }}"
+        - 8.8.8.8
+        log_path: c:\dns_log.txt
+
+     - win_domain_membership:
+
+         dns_domain_name: LAB.HASH
+ 
+         hostname: win-client
+
+         domain_admin_user: Administrator@lab.hash
+
+         domain_admin_password: Noor3333-1
+
+         state: domain
+
+       register: domain_state
+
+     - win_reboot:
+
+   
+
+
+...

